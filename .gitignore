@@ -34,3 +34,6 @@ venv/
 
 # Brain
 .gemini/
+
+# Data
+*.csv
