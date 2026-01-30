@@ -10,7 +10,8 @@ This project implements a **Data → Metrics → Insights → NLP** pipeline to 
 - **Trend Analysis**: Tracks performance over time (Semesters/Years).
 - **Insight Detection**: Automatically identifies significant improvements or declines.
 - **Natural Language Summaries**: Converts data insights into human-readable text.
-- **Cohort Analysis**: (In Progress) Metrics for entire batches/classes.
+- **Subject Correlations**: Heatmaps showing relationships between subject performances.
+- **API First**: Fully decoupled FastAPI backend serving ready-to-consume insights.
 
 ## 🏗 Architecture
 
@@ -24,8 +25,8 @@ The system is built on a 4-layer architecture:
 ## 🛠 Tech Stack
 
 - **Core Engine**: Python (Pandas, NumPy)
-- **API**: FastAPI (Planned)
-- **Frontend**: Next.js (Planned)
+- **API**: FastAPI (Uvicorn)
+- **Frontend**: Next.js (Planned Phase 3)
 
 ## 📦 Installation
 
@@ -40,13 +41,32 @@ The system is built on a 4-layer architecture:
     pip install -r requirements.txt
     ```
 
-## 🏃 Usage (Core Engine)
+## 🏃 Usage
 
-To verify the core logic and see sample insights in the console:
+### 1. Run the Backend API
+You can start the FastAPI server using the helper script:
 
 ```bash
-python3 verify_engine.py
+./run_backend.sh
 ```
+*Server runs on `http://localhost:8000` with hot-reload enabled.*
+
+### 2. Verify Data Pipeline & API
+To verify that the engine and API are working correctly with your dataset:
+
+```bash
+python3 verify_api.py   # Tests API Endpoints
+# OR
+python3 verify_engine.py # Tests Core Logic directly
+```
+
+### 3. API Endpoints
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/` | Health check and data status |
+| `GET` | `/api/v1/students/{id}/summary` | Individual student performance, history, and NLP insights |
+| `GET` | `/api/v1/cohort/trends` | Year-over-year subject performance trends |
+| `GET` | `/api/v1/cohort/correlations` | Subject correlation matrix and insights |
 
 ## 📂 Project Structure
 
@@ -54,16 +74,18 @@ python3 verify_engine.py
 .
 ├── normalize.py            # Data preprocessing script
 ├── normalized_results.csv  # Cleaned dataset
-├── verify_engine.py        # Pipeline verification script
 ├── src/
-│   ├── api/                # FastAPI application (Coming Soon)
+│   ├── api/                # FastAPI Application
+│   │   └── main.py         # API Routes & Lifespan Logic
 │   └── engine/             # Core Analytics Logic
 │       ├── metrics.py      # Statistical computations
 │       ├── insights.py     # Rule-based pattern detection
 │       └── nlp.py          # Text generation
+├── run_backend.sh          # Helper script to start server
+└── verify_api.py           # API Verification script
 ```
 
 ## 🤝 Contributing
 
 This project is currently in active development.
-
+Phase 3 (Web Dashboard) is coming next.
