@@ -68,21 +68,35 @@ python3 verify_engine.py # Tests Core Logic directly
 | `GET` | `/api/v1/cohort/trends` | Year-over-year subject performance trends |
 | `GET` | `/api/v1/cohort/correlations` | Subject correlation matrix and insights |
 
+### 4. Run the Web Dashboard
+Open a new terminal and start the Next.js frontend:
+
+```bash
+cd src/web
+npm run dev
+```
+*Dashboard runs on `http://localhost:3000`.*
+
 ## 📂 Project Structure
 
 ```
 .
 ├── normalize.py            # Data preprocessing script
 ├── normalized_results.csv  # Cleaned dataset
+├── run_backend.sh          # Helper script to start backend
+├── verify_api.py           # API Verification script
 ├── src/
 │   ├── api/                # FastAPI Application
 │   │   └── main.py         # API Routes & Lifespan Logic
-│   └── engine/             # Core Analytics Logic
-│       ├── metrics.py      # Statistical computations
-│       ├── insights.py     # Rule-based pattern detection
-│       └── nlp.py          # Text generation
-├── run_backend.sh          # Helper script to start server
-└── verify_api.py           # API Verification script
+│   ├── engine/             # Core Analytics Logic
+│   │   ├── ingest.py       # Data Ingestion & Normalization
+│   │   ├── metrics.py      # Statistical computations
+│   │   ├── insights.py     # Rule-based pattern detection
+│   │   └── nlp.py          # Text generation
+│   └── web/                # Next.js Frontend
+│       ├── app/            # App Router Pages
+│       ├── components/     # Shared Components (Navbar)
+│       └── lib/            # Utilities (API Client)
 ```
 
 ## 🤝 Contributing
