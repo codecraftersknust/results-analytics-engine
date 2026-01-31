@@ -43,15 +43,30 @@ The system is built on a 4-layer architecture:
 
 ## 🏃 Usage
 
-### 1. Run the Backend API
-You can start the FastAPI server using the helper script:
+### 1. Run the Full System
+The easiest way to start both the backend and frontend is using the helper script:
 
+```bash
+./start.sh
+```
+- **Backend API**: `http://localhost:8000`
+- **Web Dashboard**: `http://localhost:3000`
+
+### 2. Manual Startup
+If you prefer running them separately:
+
+**Backend:**
 ```bash
 ./run_backend.sh
 ```
-*Server runs on `http://localhost:8000` with hot-reload enabled.*
 
-### 2. Verify Data Pipeline & API
+**Frontend:**
+```bash
+cd src/web
+npm run dev
+```
+
+### 3. Verify Data Pipeline & API
 To verify that the engine and API are working correctly with your dataset:
 
 ```bash
