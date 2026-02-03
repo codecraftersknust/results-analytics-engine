@@ -1,8 +1,8 @@
 import pandas as pd
 
 # ---------- CONFIG ----------
-INPUT_CSV = "raw_results.csv"
-OUTPUT_CSV = "normalized_results.csv"
+INPUT_CSV = "results.csv"
+OUTPUT_CSV = "n_results.csv"
 
 SEMESTERS_PER_YEAR = 2  # <-- change here if needed
 
@@ -16,7 +16,7 @@ SUBJECT_COLUMNS = [
 ]
 
 ID_COLUMNS = {
-    "University_Roll_No": "student_id",
+    "student_id": "student_id",
     "College_Name": "institution",
     "Batch": "batch",
     "Semester": "semester"
