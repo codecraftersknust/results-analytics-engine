@@ -26,7 +26,7 @@ The system is built on a 4-layer architecture:
 
 - **Core Engine**: Python (Pandas, NumPy)
 - **API**: FastAPI (Uvicorn)
-- **Frontend**: Next.js (Planned Phase 3)
+- **Frontend**: Next.js (React, Tailwind CSS, Recharts)
 
 ## 📦 Installation
 
@@ -40,10 +40,11 @@ The system is built on a 4-layer architecture:
     ```bash
     pip install -r requirements.txt
     ```
+    *(Note: For the frontend, run `npm install` inside `src/web` if starting manually).*
 
 ## 🏃 Usage
 
-### 1. Run the Full System
+### 1. Unified Start (Recommended)
 The easiest way to start both the backend and frontend is using the helper script:
 
 ```bash
@@ -66,40 +67,24 @@ cd src/web
 npm run dev
 ```
 
-### 3. Verify Data Pipeline & API
-To verify that the engine and API are working correctly with your dataset:
-
-```bash
-python3 verify_api.py   # Tests API Endpoints
-# OR
-python3 verify_engine.py # Tests Core Logic directly
-```
-
 ### 3. API Endpoints
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `GET` | `/` | Health check and data status |
-| `GET` | `/api/v1/students/{id}/summary` | Individual student performance, history, and NLP insights |
+| `POST` | `/api/v1/datasets/upload` | Upload raw CSV dataset |
+| `POST` | `/api/v1/datasets/{id}/process` | Normalize and ingest dataset |
+| `GET` | `/api/v1/students` | List all students |
+| `GET` | `/api/v1/students/{id}/summary` | Individual student performance & automation insights |
 | `GET` | `/api/v1/cohort/trends` | Year-over-year subject performance trends |
-| `GET` | `/api/v1/cohort/correlations` | Subject correlation matrix and insights |
-
-### 4. Run the Web Dashboard
-Open a new terminal and start the Next.js frontend:
-
-```bash
-cd src/web
-npm run dev
-```
-*Dashboard runs on `http://localhost:3000`.*
+| `GET` | `/api/v1/cohort/correlations` | Subject correlation matrix |
 
 ## 📂 Project Structure
 
 ```
 .
-├── normalize.py            # Data preprocessing script
-├── normalized_results.csv  # Cleaned dataset
-├── run_backend.sh          # Helper script to start backend
-├── verify_api.py           # API Verification script
+├── start.sh                # Main entry point (Backend + Frontend)
+├── run_backend.sh          # Helper script for backend only
+├── results.csv             # Sample dataset
+├── requirements.txt        # Python dependencies
 ├── src/
 │   ├── api/                # FastAPI Application
 │   │   └── main.py         # API Routes & Lifespan Logic
@@ -110,11 +95,13 @@ npm run dev
 │   │   └── nlp.py          # Text generation
 │   └── web/                # Next.js Frontend
 │       ├── app/            # App Router Pages
-│       ├── components/     # Shared Components (Navbar)
-│       └── lib/            # Utilities (API Client)
+│       ├── components/     # Shared Components
+│       └── lib/            # Utilities
 ```
 
 ## 🤝 Contributing
 
-This project is currently in active development.
-Phase 3 (Web Dashboard) is coming next.
+This project is in active development.
+- **Phase 1 & 2**: Core Engine & API (Completed)
+- **Phase 3**: Web Dashboard (Completed)
+- **Phase 4**: Machine Learning / Predictive Models (Planned)
