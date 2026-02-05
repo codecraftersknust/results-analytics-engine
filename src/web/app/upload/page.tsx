@@ -63,18 +63,18 @@ export default function UploadPage() {
             </div>
 
             <div className="bg-white p-8 rounded-xl border border-dashed border-slate-300 shadow-sm flex flex-col items-center justify-center text-center space-y-4">
-                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center">
+                <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center">
                     {status === "uploading" || status === "processing" ? (
-                        <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                        <Loader2 className="w-8 h-8 text-orange-600 animate-spin" />
                     ) : (
-                        <Upload className="w-8 h-8 text-blue-600" />
+                        <Upload className="w-8 h-8 text-orange-600" />
                     )}
                 </div>
 
                 <div className="space-y-2">
                     <label
                         htmlFor="file-upload"
-                        className="cursor-pointer inline-flex items-center justify-center px-4 py-2 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50 font-medium transition-colors"
+                        className="cursor-pointer inline-flex items-center justify-center px-4 py-2 border border-orange-600 text-orange-600 rounded-md hover:bg-orange-50 font-medium transition-colors"
                     >
                         Choose CSV File
                     </label>
@@ -103,7 +103,7 @@ export default function UploadPage() {
                     "p-4 rounded-lg flex items-start gap-3",
                     status === "error" ? "bg-red-50 text-red-700" :
                         status === "success" ? "bg-green-50 text-green-700" :
-                            "bg-blue-50 text-blue-700"
+                            "bg-orange-50 text-orange-700"
                 )}>
                     {status === "error" ? <AlertCircle className="w-5 h-5 shrink-0" /> :
                         status === "success" ? <CheckCircle className="w-5 h-5 shrink-0" /> :
@@ -125,7 +125,7 @@ export default function UploadPage() {
                         "px-6 py-2 rounded-lg font-medium text-white transition-all",
                         !file || status === "uploading" || status === "processing" || status === "success"
                             ? "bg-slate-300 cursor-not-allowed"
-                            : "bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg"
+                            : "bg-orange-600 hover:bg-orange-700 shadow-md hover:shadow-lg"
                     )}
                 >
                     {status === "processing" ? "Processing..." : "Start Upload"}

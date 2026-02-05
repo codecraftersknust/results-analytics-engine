@@ -44,7 +44,7 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
-        <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+        <Loader2 className="w-8 h-8 text-orange-600 animate-spin" />
       </div>
     );
   }
@@ -56,7 +56,7 @@ export default function Dashboard() {
           <AlertCircle className="w-8 h-8 text-red-600" />
         </div>
         <h2 className="text-xl font-semibold text-slate-800">{error}</h2>
-        <a href="/upload" className="text-blue-600 hover:underline">Go to Upload Page</a>
+        <a href="/upload" className="text-orange-600 hover:underline">Go to Upload Page</a>
       </div>
     );
   }
@@ -81,7 +81,8 @@ export default function Dashboard() {
   });
 
   // Colors for lines
-  const colors = ["#2563eb", "#db2777", "#ea580c", "#16a34a", "#9333ea", "#0891b2"];
+  // Replaced Blue (#2563eb) with Orange (#ea580c), kept others but maybe shifted warm
+  const colors = ["#ea580c", "#db2777", "#ca8a04", "#16a34a", "#9333ea", "#0891b2"];
 
   return (
     <div className="space-y-8">
@@ -96,7 +97,7 @@ export default function Dashboard() {
         {/* Main Trend Chart */}
         <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
           <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-blue-600" />
+            <TrendingUp className="w-5 h-5 text-orange-600" />
             Performance Trends
           </h3>
           <div className="h-[300px] w-full">
@@ -128,21 +129,21 @@ export default function Dashboard() {
         {/* Insights Panel */}
         <div className="space-y-6">
           {/* Key Insights Card */}
-          <div className="bg-gradient-to-br from-indigo-50 to-blue-50 p-6 rounded-xl border border-blue-100">
-            <h3 className="text-lg font-semibold text-indigo-900 mb-4 flex items-center gap-2">
+          <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-6 rounded-xl border border-orange-100">
+            <h3 className="text-lg font-semibold text-orange-900 mb-4 flex items-center gap-2">
               <Info className="w-5 h-5" />
               Key Findings
             </h3>
             {insights.length > 0 ? (
               <ul className="space-y-3">
                 {insights.map((insight, i) => (
-                  <li key={i} className="text-sm text-indigo-800 leading-relaxed bg-white/50 p-3 rounded-lg border border-indigo-100/50">
+                  <li key={i} className="text-sm text-orange-800 leading-relaxed bg-white/50 p-3 rounded-lg border border-orange-100/50">
                     {insight}
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-indigo-500 italic">No significant correlations detected yet.</p>
+              <p className="text-sm text-orange-500 italic">No significant correlations detected yet.</p>
             )}
           </div>
 

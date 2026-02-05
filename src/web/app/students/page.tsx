@@ -46,14 +46,14 @@ export default function StudentListPage() {
                         placeholder="Search by ID..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-64"
+                        className="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 w-full sm:w-64"
                     />
                 </div>
             </div>
 
             {loading ? (
                 <div className="flex py-12 justify-center">
-                    <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                    <Loader2 className="w-8 h-8 text-orange-600 animate-spin" />
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -61,18 +61,18 @@ export default function StudentListPage() {
                         <Link
                             key={student.student_id}
                             href={`/students/${student.student_id}`}
-                            className="group bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all hover:border-blue-300 flex items-center justify-between"
+                            className="group bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all hover:border-orange-300 flex items-center justify-between"
                         >
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center group-hover:bg-blue-50 transition-colors">
-                                    <User className="w-6 h-6 text-slate-400 group-hover:text-blue-600" />
+                                <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center group-hover:bg-orange-50 transition-colors">
+                                    <User className="w-6 h-6 text-slate-400 group-hover:text-orange-600" />
                                 </div>
                                 <div>
                                     <span className="block text-xs text-slate-400 uppercase tracking-wider font-semibold">Student ID</span>
                                     <span className="font-bold text-lg text-slate-900">{student.student_id}</span>
                                 </div>
                             </div>
-                            <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-blue-500" />
+                            <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-orange-500" />
                         </Link>
                     ))}
 

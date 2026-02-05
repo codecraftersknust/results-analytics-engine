@@ -31,14 +31,14 @@ export default function StudentDetailPage() {
         if (id) fetchData();
     }, [id]);
 
-    if (loading) return <div className="flex h-[50vh] items-center justify-center"><Loader2 className="w-8 h-8 text-blue-600 animate-spin" /></div>;
+    if (loading) return <div className="flex h-[50vh] items-center justify-center"><Loader2 className="w-8 h-8 text-orange-600 animate-spin" /></div>;
     if (error || !data) return <div className="p-8 text-center text-red-600">{error}</div>;
 
     return (
         <div className="max-w-5xl mx-auto space-y-8">
             {/* Header */}
             <div className="flex items-center gap-6 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                <div className="w-16 h-16 bg-blue-600 text-white rounded-2xl flex items-center justify-center text-2xl font-bold">
+                <div className="w-16 h-16 bg-orange-600 text-white rounded-2xl flex items-center justify-center text-2xl font-bold">
                     {data.student_id.toString().slice(-2)}
                 </div>
                 <div>
@@ -61,7 +61,7 @@ export default function StudentDetailPage() {
                                 <XAxis dataKey="time_label" fontSize={12} tickLine={false} axisLine={false} dy={10} />
                                 <YAxis domain={[0, 100]} fontSize={12} tickLine={false} axisLine={false} />
                                 <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                                <Bar dataKey="average_score" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="average_score" fill="#ea580c" radius={[4, 4, 0, 0]} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
@@ -74,7 +74,7 @@ export default function StudentDetailPage() {
                         <div className="space-y-4">
                             {data.insights.map((text: string, i: number) => (
                                 <div key={i} className="flex gap-3 items-start">
-                                    <div className="mt-1 w-2 h-2 rounded-full bg-blue-500 shrink-0" />
+                                    <div className="mt-1 w-2 h-2 rounded-full bg-orange-500 shrink-0" />
                                     <p className="text-sm text-slate-600 leading-relaxed">{text}</p>
                                 </div>
                             ))}
