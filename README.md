@@ -47,9 +47,17 @@ The system is built on a 4-layer architecture:
 ### 1. Unified Start (Recommended)
 The easiest way to start both the backend and frontend is using the helper script:
 
+**Linux/Mac:**
 ```bash
 ./start.sh
 ```
+
+**Windows:**
+Double-click `start.bat` or run:
+```cmd
+start.bat
+```
+
 - **Backend API**: `http://localhost:8000`
 - **Web Dashboard**: `http://localhost:3000`
 
