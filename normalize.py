@@ -1,11 +1,13 @@
 import pandas as pd
 
 # ---------- CONFIG ----------
+# Configuration constants for input/output files and semester logic.
 INPUT_CSV = "results.csv"
 OUTPUT_CSV = "n_results.csv"
 
-SEMESTERS_PER_YEAR = 2  # <-- change here if needed
+SEMESTERS_PER_YEAR = 2  # <-- change here if needed (e.g., 3 for trimesters)
 
+# Columns representing subject scores in the wide-format input CSV.
 SUBJECT_COLUMNS = [
     "Subject_1",
     "Subject_2",
@@ -15,6 +17,7 @@ SUBJECT_COLUMNS = [
     "Subject_6"
 ]
 
+# Mapping from raw CSV column names to our internal standardized names.
 ID_COLUMNS = {
     "student_id": "student_id",
     "College_Name": "institution",
@@ -25,44 +28,60 @@ ID_COLUMNS = {
 
 
 def normalize_dataset():
+    """
+    Reads the raw results CSV, cleans the data, and normalizes it into a long-format structure.
+    
+    Steps:
+    1. Load Data
+    2. Rename Columns
+    3. Clean Data (Drop aggregates, ensure numeric types)
+    4. Derive Time Metrics (Year, Term, Time Index)
+    5. Melt/Normalize (Convert multiple subject columns into single 'subject' and 'score' columns)
+    6. Save Output
+    """
     # Load dataset
     df = pd.read_csv(INPUT_CSV)
 
-    # Rename identifier columns
+    # Rename identifier columns to standard names
     df = df.rename(columns=ID_COLUMNS)
 
-    # Drop derived columns if they exist
+    # Drop derived columns if they exist in raw data (we calculate our own aggregates later)
     df = df.drop(
         columns=[c for c in ["semester avg", "overall avg"] if c in df.columns],
         errors="ignore"
     )
 
-    # Ensure semester is numeric
+    # Ensure semester is numeric (handle potential dirty data)
     df["semester_num"] = pd.to_numeric(df["semester"], errors="coerce")
 
     if df["semester_num"].isna().any():
         raise ValueError("Non-numeric semester values detected. Fix input data first.")
 
     # ---- DERIVE YEAR & TERM ----
+    # We calculate Year and Term from the Semester number.
+    # e.g., Semester 3 -> Year 2, Term 1 (assuming 2 semesters per year)
     df["year"] = ((df["semester_num"] - 1) // SEMESTERS_PER_YEAR) + 1
     df["term"] = ((df["semester_num"] - 1) % SEMESTERS_PER_YEAR) + 1
 
-    # Human-readable label
+    # Human-readable label (e.g., "Year 2 Sem 1")
     df["time_label"] = (
         "Year " + df["year"].astype(int).astype(str) +
         " Sem " + df["term"].astype(int).astype(str)
     )
 
-    # Global ordering index
+    # Global ordering index (Useful for plotting over time)
     df["time_index"] = df["semester_num"].astype(int)
 
     normalized_rows = []
 
     # Normalize subject scores
+    # The input is 'wide' (one row per student-semester, with columns for Subj1, Subj2...)
+    # We convert this to 'long' (one row per student-semester-subject)
     for _, row in df.iterrows():
         for subject_col in SUBJECT_COLUMNS:
             score = row.get(subject_col)
 
+            # Skip if score is missing (student didn't take this subject)
             if pd.isna(score):
                 continue
 

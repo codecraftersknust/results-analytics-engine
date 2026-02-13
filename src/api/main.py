@@ -11,9 +11,11 @@ from typing import List
 # Ensure src is in pythonpath
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from src.engine import metrics, insights, nlp, ingest
+from src.engine import metrics, insights, nlp, ingest, ml
 
 # Global State for Data
+# We use a simple in-memory cache for the dataset. 
+# In a production environment, this would likely be a database (PostgreSQL/Redis).
 DATA_CACHE = {}
 UPLOAD_DIR = "data/uploads"
 NORMALIZED_FILE = "normalized_results.csv"
@@ -23,7 +25,13 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Load CSV data into memory on startup."""
+    """
+    Lifespan context manager for FastAPI.
+    Executes on startup and shutdown.
+    
+    1. Startup: Loads the normalized CSV data into memory (DATA_CACHE) for fast access.
+    2. Shutdown: Clears the cache.
+    """
     try:
         # Load default normalized file if exists
         csv_path = NORMALIZED_FILE
@@ -92,6 +100,7 @@ async def upload_dataset(file: UploadFile = File(...)):
 def process_dataset(dataset_id: str, background_tasks: BackgroundTasks):
     """
     Trigger processing (normalization + loading) of an uploaded dataset.
+    This runs the data cleaning and normalization pipeline.
     """
     # Find the file
     files = [f for f in os.listdir(UPLOAD_DIR) if f.startswith(dataset_id)]
@@ -129,8 +138,6 @@ def process_dataset(dataset_id: str, background_tasks: BackgroundTasks):
 
 # --- Analytics Endpoints ---
 
-# --- Endpoints ---
-
 @app.get("/api/v1/students")
 def list_students(limit: int = 100, search: str = ""):
     df = DATA_CACHE.get("df")
@@ -154,6 +161,10 @@ def list_students(limit: int = 100, search: str = ""):
 
 @app.get("/api/v1/students/{student_id}/summary")
 def get_student_summary(student_id: int):
+    """
+    Returns a high-level summary of a student's academic history.
+    Includes overall average, total semesters, and automated insights.
+    """
     df = DATA_CACHE.get("df")
     if df is None or df.empty:
          raise HTTPException(status_code=503, detail="Data not loaded")
@@ -200,6 +211,10 @@ def get_cohort_trends():
 
 @app.get("/api/v1/cohort/correlations")
 def get_cohort_correlations():
+    """
+    Returns correlation matrix data between subjects.
+    Used for the heatmap visualization.
+    """
     df = DATA_CACHE.get("df")
     if df is None or df.empty:
          raise HTTPException(status_code=503, detail="Data not loaded")
@@ -212,7 +227,7 @@ def get_cohort_correlations():
     narrative_insights = [nlp.explain_insight(i) for i in insights_list]
     
     # 3. Format full matrix for a Heatmap implementation on frontend
-    # We return it as a list of {subject_a, subject_b, correlation}
+    # We return it as a list of {x: subject_a, y: subject_b, value: correlation_coefficient}
     matrix_data = []
     for subj_a in corr_matrix.columns:
         for subj_b in corr_matrix.columns:
@@ -227,3 +242,100 @@ def get_cohort_correlations():
         "heatmap_data": matrix_data
     }
 
+# --- Machine Learning API Endpoints ---
+
+@app.get("/api/v1/students/{student_id}/ml/profile")
+def get_student_ml_profile(student_id: int):
+    """
+    Returns the ML Cluster Profile for a student (e.g. 'Consistent High Performer').
+    Uses K-Means clustering on the entire dataset to segment the student.
+    """
+    df = DATA_CACHE.get("df")
+    if df is None or df.empty:
+         raise HTTPException(status_code=503, detail="Data not loaded")
+
+    # Filter for student to check existence
+    if student_id not in df["student_id"].values:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    # 1. Feature Extraction (On entire dataset for context)
+    # We need the whole dataset to define the clusters relative to the population.
+    extractor = ml.FeatureExtractor(df)
+    features_df = extractor.extract_features()
+    
+    # 2. Clustering (Train on fly for now - perfectly fine for <100k records)
+    # In production, this model would be trained periodically and saved (pickled).
+    model = ml.StudentClusterModel(n_clusters=4)
+    model.train(features_df)
+    
+    # 3. Get Result
+    result = model.get_student_cluster(student_id, features_df)
+    
+    if not result:
+        raise HTTPException(status_code=500, detail="Failed to generate ML profile")
+        
+    return result
+
+@app.get("/api/v1/students/{student_id}/ml/forecast")
+def get_student_forecast(student_id: int):
+    """
+    Returns a performance forecast for the next semester.
+    Uses Linear Regression on the student's personal history.
+    """
+    df = DATA_CACHE.get("df")
+    if df is None or df.empty:
+         raise HTTPException(status_code=503, detail="Data not loaded")
+
+    # Filter for student to check existence
+    if student_id not in df["student_id"].values:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    # Predict
+    forecaster = ml.PerformanceForecaster(df)
+    result = forecaster.forecast_next_semester(student_id)
+    
+    if not result:
+        raise HTTPException(status_code=500, detail="Failed to generate forecast")
+        
+    return result
+
+@app.get("/api/v1/students/{student_id}/ml/risk")
+def get_student_risk(student_id: int):
+    """
+    Returns a risk assessment (Low, Moderate, Critical).
+    Analyzes trends, drops, and variance.
+    """
+    df = DATA_CACHE.get("df")
+    if df is None or df.empty:
+         raise HTTPException(status_code=503, detail="Data not loaded")
+
+    # Filter for student to check existence
+    if student_id not in df["student_id"].values:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    # Detect Risk
+    detector = ml.RiskDetector(df)
+    result = detector.assess_student_risk(student_id)
+    
+    if not result:
+        raise HTTPException(status_code=500, detail="Failed to assess risk")
+        
+    return result
+
+@app.get("/api/v1/cohort/subjects/analysis")
+def get_subject_analysis():
+    """
+    Returns PCA analysis of subjects to visualize their relationships.
+    """
+    df = DATA_CACHE.get("df")
+    if df is None or df.empty:
+         raise HTTPException(status_code=503, detail="Data not loaded")
+
+    analyzer = ml.SubjectAnalyzer(df)
+    result = analyzer.analyze_subjects()
+    
+    if "error" in result:
+        # Not a server error, just insufficient data for this specific analysis
+        return result
+        
+    return result
