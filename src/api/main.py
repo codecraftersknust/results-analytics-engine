@@ -54,7 +54,7 @@ async def lifespan(app: FastAPI):
     DATA_CACHE.clear()
 
 app = FastAPI(
-    title="Academic Analytics Engine API",
+    title="Graide API",
     description="API for accessing student academic performance insights",
     version="1.1.0",
     lifespan=lifespan

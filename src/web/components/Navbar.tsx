@@ -21,7 +21,7 @@ export default function Navbar() {
                     <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center">
                         <BarChart3 className="w-5 h-5 text-white" />
                     </div>
-                    <span className="font-bold text-xl text-slate-800">AcademicEngine</span>
+                    <span className="font-bold text-xl text-slate-800">Graide</span>
                 </div>
 
                 <div className="flex items-center gap-1">

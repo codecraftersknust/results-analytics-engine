@@ -1,6 +1,6 @@
-# Academic Analytics Engine
+# Graide
 
-A data analytics system designed to turn raw academic results into explainable insights for students, teachers, and administrators.
+Graide is a data analytics system designed to turn raw academic results into explainable insights for students, teachers, and administrators.
 
 ## 🚀 Overview
 
