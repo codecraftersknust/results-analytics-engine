@@ -10,8 +10,8 @@ export default function Navbar() {
 
     const links = [
         { href: "/", label: "Dashboard", icon: BarChart3 },
-        { href: "/upload", label: "Upload Data", icon: Upload },
         { href: "/students", label: "Students", icon: GraduationCap },
+        { href: "/upload", label: "Upload Data", icon: Upload },
     ];
 
     return (
