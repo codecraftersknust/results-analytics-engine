@@ -1,5 +1,7 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks
+from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordRequestForm
+from datetime import timedelta
 from contextlib import asynccontextmanager
 import pandas as pd
 import sys
@@ -12,6 +14,7 @@ from typing import List
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 from src.engine import metrics, insights, nlp, ingest, ml
+from src.api import auth
 
 # Global State for Data
 # We use a simple in-memory cache for the dataset. 
@@ -73,13 +76,56 @@ app.add_middleware(
 def health_check():
     return {"status": "ok", "records_loaded": len(DATA_CACHE.get("df", []))}
 
+def get_filtered_df(current_user: auth.UserResponse):
+    df = DATA_CACHE.get("df")
+    if df is None or df.empty:
+         raise HTTPException(status_code=503, detail="Data not loaded")
+         
+    if current_user.role == "teacher":
+        if not current_user.subjects:
+            raise HTTPException(status_code=403, detail="Teacher has no assigned subjects")
+        df = df[df["subject"].isin(current_user.subjects)]
+        if df.empty:
+            raise HTTPException(status_code=404, detail="No data available for assigned subjects")
+    return df
+
+# --- Auth Endpoints ---
+
+@app.post("/api/v1/auth/login", response_model=auth.Token)
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+    user = auth.get_user_by_email(form_data.username)
+    if not user or not auth.verify_password(form_data.password, user.password_hash):
+        raise HTTPException(
+            status_code=401,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
+    
+    subjects_list = [s.strip() for s in user.subjects.split(",")] if user.subjects else []
+    user_resp = auth.UserResponse(
+        id=user.id, email=user.email, name=user.name, 
+        role=user.role, subjects=subjects_list
+    )
+    
+    access_token = auth.create_access_token(
+        data={"sub": user.email}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer", "user": user_resp}
+
+@app.get("/api/v1/auth/me", response_model=auth.UserResponse)
+async def read_users_me(current_user: auth.UserResponse = Depends(auth.get_current_user)):
+    return current_user
+
 # --- Ingestion Endpoints ---
 
 @app.post("/api/v1/datasets/upload")
-async def upload_dataset(file: UploadFile = File(...)):
+async def upload_dataset(file: UploadFile = File(...), current_user: auth.UserResponse = Depends(auth.get_current_user)):
     """
     Upload a raw CSV file. Returns a dataset_id.
     """
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can upload datasets.")
     if not file.filename.endswith('.csv'):
         raise HTTPException(status_code=400, detail="Only CSV files are supported.")
     
@@ -97,11 +143,13 @@ async def upload_dataset(file: UploadFile = File(...)):
     }
 
 @app.post("/api/v1/datasets/{dataset_id}/process")
-def process_dataset(dataset_id: str, background_tasks: BackgroundTasks):
+def process_dataset(dataset_id: str, background_tasks: BackgroundTasks, current_user: auth.UserResponse = Depends(auth.get_current_user)):
     """
     Trigger processing (normalization + loading) of an uploaded dataset.
     This runs the data cleaning and normalization pipeline.
     """
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can process datasets.")
     # Find the file
     files = [f for f in os.listdir(UPLOAD_DIR) if f.startswith(dataset_id)]
     if not files:
@@ -139,10 +187,8 @@ def process_dataset(dataset_id: str, background_tasks: BackgroundTasks):
 # --- Analytics Endpoints ---
 
 @app.get("/api/v1/students")
-def list_students(limit: int = 100, search: str = ""):
-    df = DATA_CACHE.get("df")
-    if df is None or df.empty:
-         raise HTTPException(status_code=503, detail="Data not loaded")
+def list_students(limit: int = 100, search: str = "", current_user: auth.UserResponse = Depends(auth.get_current_user)):
+    df = get_filtered_df(current_user)
     
     # Get unique students
     # We assume 'student_id' exists. If 'name' existed we would return that too.
@@ -160,14 +206,12 @@ def list_students(limit: int = 100, search: str = ""):
     }
 
 @app.get("/api/v1/students/{student_id}/summary")
-def get_student_summary(student_id: int):
+def get_student_summary(student_id: int, current_user: auth.UserResponse = Depends(auth.get_current_user)):
     """
     Returns a high-level summary of a student's academic history.
     Includes overall average, total semesters, and automated insights.
     """
-    df = DATA_CACHE.get("df")
-    if df is None or df.empty:
-         raise HTTPException(status_code=503, detail="Data not loaded")
+    df = get_filtered_df(current_user)
 
     # Filter for student
     student_df = df[df["student_id"] == student_id]
@@ -198,10 +242,8 @@ def get_student_summary(student_id: int):
     }
 
 @app.get("/api/v1/cohort/trends")
-def get_cohort_trends():
-    df = DATA_CACHE.get("df")
-    if df is None or df.empty:
-         raise HTTPException(status_code=503, detail="Data not loaded")
+def get_cohort_trends(current_user: auth.UserResponse = Depends(auth.get_current_user)):
+    df = get_filtered_df(current_user)
          
     trends = metrics.calculate_cohort_trends(df)
     
@@ -210,14 +252,12 @@ def get_cohort_trends():
     }
 
 @app.get("/api/v1/cohort/correlations")
-def get_cohort_correlations():
+def get_cohort_correlations(current_user: auth.UserResponse = Depends(auth.get_current_user)):
     """
     Returns correlation matrix data between subjects.
     Used for the heatmap visualization.
     """
-    df = DATA_CACHE.get("df")
-    if df is None or df.empty:
-         raise HTTPException(status_code=503, detail="Data not loaded")
+    df = get_filtered_df(current_user)
     
     # 1. Calculate Matrix
     corr_matrix = metrics.calculate_subject_correlations(df)
@@ -245,14 +285,12 @@ def get_cohort_correlations():
 # --- Machine Learning API Endpoints ---
 
 @app.get("/api/v1/students/{student_id}/ml/profile")
-def get_student_ml_profile(student_id: int):
+def get_student_ml_profile(student_id: int, current_user: auth.UserResponse = Depends(auth.get_current_user)):
     """
     Returns the ML Cluster Profile for a student (e.g. 'Consistent High Performer').
     Uses K-Means clustering on the entire dataset to segment the student.
     """
-    df = DATA_CACHE.get("df")
-    if df is None or df.empty:
-         raise HTTPException(status_code=503, detail="Data not loaded")
+    df = get_filtered_df(current_user)
 
     # Filter for student to check existence
     if student_id not in df["student_id"].values:
@@ -277,14 +315,12 @@ def get_student_ml_profile(student_id: int):
     return result
 
 @app.get("/api/v1/students/{student_id}/ml/forecast")
-def get_student_forecast(student_id: int):
+def get_student_forecast(student_id: int, current_user: auth.UserResponse = Depends(auth.get_current_user)):
     """
     Returns a performance forecast for the next semester.
     Uses Linear Regression on the student's personal history.
     """
-    df = DATA_CACHE.get("df")
-    if df is None or df.empty:
-         raise HTTPException(status_code=503, detail="Data not loaded")
+    df = get_filtered_df(current_user)
 
     # Filter for student to check existence
     if student_id not in df["student_id"].values:
@@ -300,14 +336,12 @@ def get_student_forecast(student_id: int):
     return result
 
 @app.get("/api/v1/students/{student_id}/ml/risk")
-def get_student_risk(student_id: int):
+def get_student_risk(student_id: int, current_user: auth.UserResponse = Depends(auth.get_current_user)):
     """
     Returns a risk assessment (Low, Moderate, Critical).
     Analyzes trends, drops, and variance.
     """
-    df = DATA_CACHE.get("df")
-    if df is None or df.empty:
-         raise HTTPException(status_code=503, detail="Data not loaded")
+    df = get_filtered_df(current_user)
 
     # Filter for student to check existence
     if student_id not in df["student_id"].values:
@@ -323,13 +357,11 @@ def get_student_risk(student_id: int):
     return result
 
 @app.get("/api/v1/cohort/subjects/analysis")
-def get_subject_analysis():
+def get_subject_analysis(current_user: auth.UserResponse = Depends(auth.get_current_user)):
     """
     Returns PCA analysis of subjects to visualize their relationships.
     """
-    df = DATA_CACHE.get("df")
-    if df is None or df.empty:
-         raise HTTPException(status_code=503, detail="Data not loaded")
+    df = get_filtered_df(current_user)
 
     analyzer = ml.SubjectAnalyzer(df)
     result = analyzer.analyze_subjects()
