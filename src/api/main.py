@@ -187,8 +187,10 @@ def process_dataset(dataset_id: str, background_tasks: BackgroundTasks, current_
 # --- Analytics Endpoints ---
 
 @app.get("/api/v1/students")
-def list_students(limit: int = 100, search: str = "", current_user: auth.UserResponse = Depends(auth.get_current_user)):
-    df = get_filtered_df(current_user)
+def list_students(limit: int = 100, search: str = ""):
+    df = DATA_CACHE.get("df")
+    if df is None or df.empty:
+         raise HTTPException(status_code=503, detail="Data not loaded")
     
     # Get unique students
     # We assume 'student_id' exists. If 'name' existed we would return that too.
@@ -206,12 +208,14 @@ def list_students(limit: int = 100, search: str = "", current_user: auth.UserRes
     }
 
 @app.get("/api/v1/students/{student_id}/summary")
-def get_student_summary(student_id: int, current_user: auth.UserResponse = Depends(auth.get_current_user)):
+def get_student_summary(student_id: int):
     """
     Returns a high-level summary of a student's academic history.
     Includes overall average, total semesters, and automated insights.
     """
-    df = get_filtered_df(current_user)
+    df = DATA_CACHE.get("df")
+    if df is None or df.empty:
+         raise HTTPException(status_code=503, detail="Data not loaded")
 
     # Filter for student
     student_df = df[df["student_id"] == student_id]
@@ -285,12 +289,14 @@ def get_cohort_correlations(current_user: auth.UserResponse = Depends(auth.get_c
 # --- Machine Learning API Endpoints ---
 
 @app.get("/api/v1/students/{student_id}/ml/profile")
-def get_student_ml_profile(student_id: int, current_user: auth.UserResponse = Depends(auth.get_current_user)):
+def get_student_ml_profile(student_id: int):
     """
     Returns the ML Cluster Profile for a student (e.g. 'Consistent High Performer').
     Uses K-Means clustering on the entire dataset to segment the student.
     """
-    df = get_filtered_df(current_user)
+    df = DATA_CACHE.get("df")
+    if df is None or df.empty:
+         raise HTTPException(status_code=503, detail="Data not loaded")
 
     # Filter for student to check existence
     if student_id not in df["student_id"].values:
@@ -315,12 +321,14 @@ def get_student_ml_profile(student_id: int, current_user: auth.UserResponse = De
     return result
 
 @app.get("/api/v1/students/{student_id}/ml/forecast")
-def get_student_forecast(student_id: int, current_user: auth.UserResponse = Depends(auth.get_current_user)):
+def get_student_forecast(student_id: int):
     """
     Returns a performance forecast for the next semester.
     Uses Linear Regression on the student's personal history.
     """
-    df = get_filtered_df(current_user)
+    df = DATA_CACHE.get("df")
+    if df is None or df.empty:
+         raise HTTPException(status_code=503, detail="Data not loaded")
 
     # Filter for student to check existence
     if student_id not in df["student_id"].values:
@@ -336,12 +344,14 @@ def get_student_forecast(student_id: int, current_user: auth.UserResponse = Depe
     return result
 
 @app.get("/api/v1/students/{student_id}/ml/risk")
-def get_student_risk(student_id: int, current_user: auth.UserResponse = Depends(auth.get_current_user)):
+def get_student_risk(student_id: int):
     """
     Returns a risk assessment (Low, Moderate, Critical).
     Analyzes trends, drops, and variance.
     """
-    df = get_filtered_df(current_user)
+    df = DATA_CACHE.get("df")
+    if df is None or df.empty:
+         raise HTTPException(status_code=503, detail="Data not loaded")
 
     # Filter for student to check existence
     if student_id not in df["student_id"].values:
