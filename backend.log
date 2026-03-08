@@ -1,0 +1,49 @@
+nohup: ignoring input
+INFO:     Started server process [51338]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+Loaded 38400 records from normalized_results.csv.
+INFO:     127.0.0.1:39782 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34694 - "POST /api/v1/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34696 - "POST /api/v1/datasets/upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34708 - "POST /api/v1/datasets/a9516602-8440-46f2-ad6c-587e37f9a56e/process HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:53838 - "POST /api/v1/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53852 - "POST /api/v1/datasets/upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53866 - "POST /api/v1/datasets/dc5a54fe-0892-4e58-a049-953960d35b57/process HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:49198 - "POST /api/v1/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49208 - "POST /api/v1/datasets/upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49214 - "POST /api/v1/datasets/1a9ba502-b33f-47f6-92b0-c7f8378b6347/process HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:46934 - "POST /api/v1/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46944 - "POST /api/v1/datasets/upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46954 - "POST /api/v1/datasets/8a7e11a9-a2a8-4151-ba55-7e88338580e5/process HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:41860 - "GET /api/v1/cohort/trends HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:41876 - "GET /api/v1/cohort/correlations HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:41860 - "GET /api/v1/cohort/correlations HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:41892 - "GET /api/v1/cohort/subjects/analysis HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:41904 - "GET /api/v1/cohort/trends HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:41860 - "GET /api/v1/cohort/subjects/analysis HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:41918 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41918 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41942 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53042 - "GET /api/v1/cohort/trends HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:53056 - "GET /api/v1/cohort/correlations HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:53070 - "GET /api/v1/cohort/subjects/analysis HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:53084 - "GET /api/v1/cohort/trends HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:53094 - "GET /api/v1/cohort/correlations HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:53100 - "GET /api/v1/cohort/subjects/analysis HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:41040 - "POST /api/v1/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41040 - "OPTIONS /api/v1/cohort/trends HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41040 - "OPTIONS /api/v1/cohort/correlations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41054 - "OPTIONS /api/v1/cohort/subjects/analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41066 - "OPTIONS /api/v1/cohort/trends HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41068 - "OPTIONS /api/v1/cohort/correlations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41076 - "OPTIONS /api/v1/cohort/subjects/analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41088 - "GET /api/v1/cohort/trends HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41076 - "GET /api/v1/cohort/correlations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41068 - "GET /api/v1/cohort/trends HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41066 - "GET /api/v1/cohort/correlations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41088 - "GET /api/v1/cohort/subjects/analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41066 - "GET /api/v1/cohort/subjects/analysis HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37884 - "OPTIONS /api/v1/students?search=&limit=50 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37884 - "GET /api/v1/students?search=&limit=50 HTTP/1.1" 200 OK

@@ -122,12 +122,14 @@ async def read_users_me(current_user: auth.UserResponse = Depends(auth.get_curre
 @app.post("/api/v1/datasets/upload")
 async def upload_dataset(file: UploadFile = File(...), current_user: auth.UserResponse = Depends(auth.get_current_user)):
     """
-    Upload a raw CSV file. Returns a dataset_id.
+    Upload a raw CSV, Excel, or PDF file. Returns a dataset_id.
     """
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Only admins can upload datasets.")
-    if not file.filename.endswith('.csv'):
-        raise HTTPException(status_code=400, detail="Only CSV files are supported.")
+        
+    ext = os.path.splitext(file.filename)[1].lower()
+    if ext not in ['.csv', '.xls', '.xlsx', '.pdf']:
+        raise HTTPException(status_code=400, detail=f"Unsupported file type: {ext}")
     
     dataset_id = str(uuid.uuid4())
     file_location = os.path.join(UPLOAD_DIR, f"{dataset_id}_{file.filename}")
@@ -158,8 +160,8 @@ def process_dataset(dataset_id: str, background_tasks: BackgroundTasks, current_
     raw_path = os.path.join(UPLOAD_DIR, files[0])
     
     try:
-        # Load raw
-        raw_df = pd.read_csv(raw_path)
+        # Load raw data using universal parser
+        raw_df = ingest.parse_file(raw_path)
         
         # Validate
         if not ingest.validate_schema(raw_df):
@@ -182,7 +184,10 @@ def process_dataset(dataset_id: str, background_tasks: BackgroundTasks, current_
         }
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
+        import traceback
+        err_detail = traceback.format_exc()
+        print(err_detail)
+        raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}\n\n{err_detail}")
 
 # --- Analytics Endpoints ---
 

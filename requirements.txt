@@ -7,3 +7,5 @@ scikit-learn
 python-multipart
 passlib[bcrypt]
 python-jose[cryptography]
+openpyxl
+pdfplumber

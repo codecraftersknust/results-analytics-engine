@@ -58,7 +58,7 @@ export default function UploadPage() {
             <div>
                 <h1 className="text-3xl font-bold text-slate-900">Upload Dataset</h1>
                 <p className="text-slate-500 mt-2">
-                    Upload a raw CSV file containing student result data. The system will automatically validate and normalize it.
+                    Upload a raw CSV, Excel (.xlsx), or PDF file containing student result data. The system will automatically validate and normalize it.
                 </p>
             </div>
 
@@ -76,17 +76,17 @@ export default function UploadPage() {
                         htmlFor="file-upload"
                         className="cursor-pointer inline-flex items-center justify-center px-4 py-2 border border-orange-600 text-orange-600 rounded-md hover:bg-orange-50 font-medium transition-colors"
                     >
-                        Choose CSV File
+                        Choose File
                     </label>
                     <input
                         id="file-upload"
                         type="file"
-                        accept=".csv"
+                        accept=".csv, .xls, .xlsx, .pdf"
                         className="hidden"
                         onChange={handleFileChange}
                         disabled={status === "uploading" || status === "processing"}
                     />
-                    <p className="text-sm text-slate-400">Supported format: .csv</p>
+                    <p className="text-sm text-slate-400">Supported formats: .csv, .xlsx, .pdf</p>
                 </div>
 
                 {file && (
