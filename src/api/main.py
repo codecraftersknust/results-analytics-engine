@@ -36,8 +36,16 @@ async def lifespan(app: FastAPI):
     2. Shutdown: Clears the cache.
     """
     try:
-        # Load default normalized file if exists
-        csv_path = NORMALIZED_FILE
+        # Step 1: Check for the latest uploaded and normalized dataset
+        latest_file = None
+        if os.path.exists(UPLOAD_DIR):
+            upload_files = [os.path.join(UPLOAD_DIR, f) for f in os.listdir(UPLOAD_DIR) if f.endswith("_normalized.csv")]
+            if upload_files:
+                latest_file = max(upload_files, key=os.path.getmtime)
+                
+        # Step 2: Use the latest upload, or fall back to the default file
+        csv_path = latest_file if latest_file else NORMALIZED_FILE
+        
         if not os.path.exists(csv_path):
              csv_path = os.path.join("..", "..", NORMALIZED_FILE)
              
