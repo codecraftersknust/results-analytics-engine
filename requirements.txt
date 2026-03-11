@@ -9,3 +9,5 @@ passlib[bcrypt]
 python-jose[cryptography]
 openpyxl
 pdfplumber
+google-generativeai
+python-dotenv

@@ -13,7 +13,7 @@ from typing import List
 # Ensure src is in pythonpath
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
-from src.engine import metrics, insights, nlp, ingest, ml
+from src.engine import metrics, insights, nlp, ingest, ml, ingest_ai
 from src.api import auth
 
 # Global State for Data
@@ -160,16 +160,40 @@ def process_dataset(dataset_id: str, background_tasks: BackgroundTasks, current_
     raw_path = os.path.join(UPLOAD_DIR, files[0])
     
     try:
-        # Load raw data using universal parser
+        # First, try the fast, local heuristic parser
         raw_df = ingest.parse_file(raw_path)
         
-        # Validate
+        # Check if local parser succeeded
         if not ingest.validate_schema(raw_df):
-             raise HTTPException(status_code=400, detail="Invalid schema. Required columns missing.")
+             raise ValueError("Insufficient headers for standard heuristic parse.")
              
         # Normalize
         normalized_df = ingest.normalize_dataset(raw_df)
+
+    except Exception as heuristic_error:
+        print(f"Heuristic parser failed or rejected schema: {heuristic_error}")
+        print("Falling back to AI Data Extractor (Gemini)...")
         
+        try:
+            # Determine mime type for Gemini
+            ext = os.path.splitext(raw_path)[1].lower()
+            mime_type = "text/csv"
+            if ext in [".xls", ".xlsx"]:
+                mime_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            elif ext == ".pdf":
+                mime_type = "application/pdf"
+            
+            # Use the LLM to extract directly to the normalized schema
+            extractor = ingest_ai.LLMDataExtractor()
+            normalized_df = extractor.extract_from_file(raw_path, mime_type)
+            
+        except Exception as ai_error:
+            # If AI also fails, return the combined error
+            import traceback
+            err_detail = traceback.format_exc()
+            raise HTTPException(status_code=500, detail=f"Both Parsers Failed.\n\nHeuristic Error: {heuristic_error}\n\nAI Error: {ai_error}\n\n{err_detail}")
+            
+    try:
         # Save Normalized
         processed_path = os.path.join(UPLOAD_DIR, f"{dataset_id}_normalized.csv")
         normalized_df.to_csv(processed_path, index=False)
