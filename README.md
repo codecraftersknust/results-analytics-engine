@@ -7,9 +7,10 @@ Graide is a data analytics system designed to turn raw academic results into exp
 This project implements a **Data → Metrics → Insights → NLP** pipeline to analyze student performance trends, improvement/decline, and subject correlations. Unlike black-box ML models, this engine prioritizes **explainability** and **rule-based logic** to provide transparent actionable feedback.
 
 ### Key Features
+- **Universal AI Data Ingestion**: Upload structured CSVs, raw Excel sheets, or messy PDFs. The system automatically uses **Google Gemini 2.5 Flash** to extract and normalize the data without strict templating.
 - **Trend Analysis**: Tracks performance over time (Semesters/Years).
 - **Insight Detection**: Automatically identifies significant improvements or declines.
-- **Natural Language Summaries**: Converts data insights into human-readable text.
+- **Natural Language Summaries**: Uses Generative AI to convert data insights into natural, professional text summaries.
 - **Machine Learning**: Predicts future scores and assesses dropout risks (Clustering & Linear Regression).
 - **Role-Based Access**: Secure JWT authentication. Teachers only see metrics for their assigned subjects, while Admins have full access.
 - **Subject Correlations**: Heatmaps showing relationships between subject performances.
@@ -19,14 +20,15 @@ This project implements a **Data → Metrics → Insights → NLP** pipeline to 
 
 The system is built on a 4-layer architecture:
 
-1.  **Data Layer**: Ingests normalized CSV data.
+1.  **Data Layer**: Ingests normalized CSV data or parses unstructured documents (PDF/Excel) using Gemini LLM Extraction.
 2.  **Metrics Layer**: Computes objective statistics (averages, deltas, correlations).
 3.  **Insight Layer**: Applies rules to metrics to detect patterns.
-4.  **NLP Layer**: Generates English descriptions from structured insights.
+4.  **NLP Layer**: Generates English descriptions dynamically using Google Gemini.
 
 ## 🛠 Tech Stack
 
-- **Core Engine**: Python (Pandas, NumPy)
+- **Core Engine**: Python (Pandas, NumPy, Scikit-Learn)
+- **AI Integration**: Google Generative AI (Gemini 2.5 Flash)
 - **API**: FastAPI (Uvicorn)
 - **Frontend**: Next.js (React, Tailwind CSS, Recharts)
 
@@ -42,6 +44,7 @@ The system is built on a 4-layer architecture:
     ```bash
     pip install -r requirements.txt
     ```
+    *(Ensure you configure a `.env` file with your `GEMINI_API_KEY` for the AI features to work).*
 4.  Initialize the database with demo users:
     ```bash
     python3 src/api/seed.py
@@ -90,8 +93,8 @@ npm run dev
 ### 3. API Endpoints
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `POST` | `/api/v1/datasets/upload` | Upload raw CSV dataset (Admin Only) |
-| `POST` | `/api/v1/datasets/{id}/process` | Normalize and ingest dataset (Admin Only) |
+| `POST` | `/api/v1/datasets/upload` | Upload raw CSV, Excel, or PDF datasets (Admin Only) |
+| `POST` | `/api/v1/datasets/{id}/process` | AI-assisted data normalization and ingestion (Admin Only) |
 | `POST` | `/api/v1/auth/login` | JWT Login endpoint |
 | `GET` | `/api/v1/students` | List all students |
 | `GET` | `/api/v1/students/{id}/summary` | Individual student performance & automation insights |
@@ -111,10 +114,12 @@ npm run dev
 │   ├── api/                # FastAPI Application
 │   │   └── main.py         # API Routes & Lifespan Logic
 │   ├── engine/             # Core Analytics Logic
-│   │   ├── ingest.py       # Data Ingestion & Normalization
+│   │   ├── ingest.py       # Data Validation & Normalization
+│   │   ├── ingest_ai.py    # LLM Data Extractor
 │   │   ├── metrics.py      # Statistical computations
 │   │   ├── insights.py     # Rule-based pattern detection
-│   │   └── nlp.py          # Text generation
+│   │   ├── nlp.py          # AI Text generation
+│   │   └── llm_client.py   # Gemini API Configuration
 │   └── web/                # Next.js Frontend
 │       ├── app/            # App Router Pages
 │       ├── components/     # Shared Components
@@ -123,9 +128,10 @@ npm run dev
 
 ## 🤝 Contributing
 
-This project is in active development.
+This project is functionally complete!
 - **Phase 1 & 2**: Core Engine & API (Completed)
 - **Phase 3**: Web Dashboard (Completed)
 - **Phase 4**: Machine Learning / Predictive Models (Completed)
 - **Phase 5**: Role-Based Account System (Completed)
-- **Phase 6**: Advanced NLP Context Generation (Planned)
+- **Phase 6**: Advanced File Ingestion (Excel & PDF) (Completed)
+- **Phase 7**: AI Integration for Ingestion & NLP Feedback (Completed)
