@@ -1,16 +1,13 @@
 import os
 import google.generativeai as genai
-from dotenv import load_dotenv
-
-# Load environment variables from .env file
-load_dotenv()
-
+from src.config import settings
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
 else:
-    print("WARNING: GEMINI_API_KEY environment variable not set. AI features will not work.")
+    if settings.environment != "production":
+        print("WARNING: GEMINI_API_KEY environment variable not set. AI features will not work.")
 
 def get_gemini_model(model_name="gemini-2.5-flash"):
     """

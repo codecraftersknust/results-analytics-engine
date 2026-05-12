@@ -12,7 +12,7 @@ cleanup() {
 trap cleanup SIGINT
 
 echo "Starting Backend API (Port 8000)..."
-uvicorn src.api.main:app --reload --port 8000 &
+.venv/bin/uvicorn src.api.main:app --reload --port 8000 &
 BACKEND_PID=$!
 
 echo "Starting Frontend Dashboard (Port 3000)..."

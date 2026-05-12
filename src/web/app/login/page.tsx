@@ -31,7 +31,11 @@ export default function LoginPage() {
 
             login(response.data.access_token, response.data.user);
         } catch (err: any) {
-            setError(err.response?.data?.detail || "Failed to login. Please check your credentials.");
+            setError(
+                err.response?.data?.detail ||
+                err.response?.data?.error?.message ||
+                "Failed to login. Please check your credentials."
+            );
             setLoading(false);
         }
     };
@@ -99,11 +103,6 @@ export default function LoginPage() {
                         </button>
                     </form>
 
-                    <div className="mt-6 pt-6 border-t border-slate-100 text-center text-sm text-slate-500">
-                        <p>Demo accounts:</p>
-                        <p className="mt-1">admin@graide.com / adminpassword</p>
-                        <p>math@graide.com / password123</p>
-                    </div>
                 </div>
             </div>
         </div>

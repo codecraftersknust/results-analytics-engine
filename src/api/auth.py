@@ -3,21 +3,24 @@ import os
 from datetime import datetime, timedelta
 from typing import Optional, List
 from pydantic import BaseModel
-from passlib.context import CryptContext
+import bcrypt
 from jose import JWTError, jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from src.config import settings
 
 # DB Config
-DB_FILE = "data/users.db"
+DB_FILE = settings.users_db_file
 os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
 
 # Auth Config
-SECRET_KEY = "super-secret-key-change-in-production"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
+SECRET_KEY = settings.jwt_secret
+ALGORITHM = settings.jwt_algorithm
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+if not SECRET_KEY and settings.environment != "development":
+    raise RuntimeError("JWT_SECRET must be set outside development.")
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 # --- Models ---
@@ -60,10 +63,17 @@ def init_db():
 
 # --- Auth Utils ---
 def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
+    except ValueError:
+        # bcrypt has a hard 72-byte input limit; this mirrors backend behavior safely.
+        return bcrypt.checkpw(
+            plain_password.encode("utf-8")[:72],
+            hashed_password.encode("utf-8"),
+        )
 
 def get_password_hash(password):
-    return pwd_context.hash(password)
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()

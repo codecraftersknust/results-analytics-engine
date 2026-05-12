@@ -1,6 +1,7 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks, Depends
+from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.responses import JSONResponse
 from datetime import timedelta
 from contextlib import asynccontextmanager
 import pandas as pd
@@ -8,6 +9,8 @@ import sys
 import os
 import shutil
 import uuid
+import logging
+import re
 from typing import List
 
 # Ensure src is in pythonpath
@@ -15,13 +18,18 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")
 
 from src.engine import metrics, insights, nlp, ingest, ml, ingest_ai
 from src.api import auth
+from src.config import settings
 
 # Global State for Data
 # We use a simple in-memory cache for the dataset. 
 # In a production environment, this would likely be a database (PostgreSQL/Redis).
 DATA_CACHE = {}
-UPLOAD_DIR = "data/uploads"
-NORMALIZED_FILE = "normalized_results.csv"
+UPLOAD_DIR = settings.upload_dir
+NORMALIZED_FILE = settings.normalized_file
+MAX_UPLOAD_BYTES = settings.max_upload_size_mb * 1024 * 1024
+ALLOWED_EXTENSIONS = {".csv", ".xls", ".xlsx", ".pdf"}
+SAFE_FILE_RE = re.compile(r"[^A-Za-z0-9._-]+")
+logger = logging.getLogger(__name__)
 
 # Create upload dir if not exists
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -71,14 +79,63 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+
+def _sanitize_filename(filename: str) -> str:
+    if not filename:
+        return "upload"
+    cleaned = SAFE_FILE_RE.sub("_", filename).strip("._")
+    return cleaned or "upload"
+
+
+async def _validate_upload_size(file: UploadFile) -> None:
+    size = 0
+    while True:
+        chunk = await file.read(1024 * 1024)
+        if not chunk:
+            break
+        size += len(chunk)
+        if size > MAX_UPLOAD_BYTES:
+            raise HTTPException(
+                status_code=413,
+                detail=f"File exceeds max upload size of {settings.max_upload_size_mb}MB",
+            )
+    await file.seek(0)
+
 # CORS (Allow frontend to connect)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # TODO: Restrict in production
-    allow_credentials=True,
+    allow_origins=settings.cors_origins,
+    allow_credentials="*" not in settings.cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": {
+                "message": exc.detail,
+                "path": request.url.path,
+            }
+        },
+    )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    logger.exception("Unhandled error on %s", request.url.path, exc_info=exc)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": {
+                "message": "Internal server error",
+                "path": request.url.path,
+            }
+        },
+    )
 
 @app.get("/")
 def health_check():
@@ -135,12 +192,14 @@ async def upload_dataset(file: UploadFile = File(...), current_user: auth.UserRe
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Only admins can upload datasets.")
         
-    ext = os.path.splitext(file.filename)[1].lower()
-    if ext not in ['.csv', '.xls', '.xlsx', '.pdf']:
+    await _validate_upload_size(file)
+    safe_filename = _sanitize_filename(file.filename or "")
+    ext = os.path.splitext(safe_filename)[1].lower()
+    if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(status_code=400, detail=f"Unsupported file type: {ext}")
     
     dataset_id = str(uuid.uuid4())
-    file_location = os.path.join(UPLOAD_DIR, f"{dataset_id}_{file.filename}")
+    file_location = os.path.join(UPLOAD_DIR, f"{dataset_id}_{safe_filename}")
     
     with open(file_location, "wb+") as file_object:
         shutil.copyfileobj(file.file, file_object)
@@ -148,7 +207,7 @@ async def upload_dataset(file: UploadFile = File(...), current_user: auth.UserRe
     return {
         "message": "File uploaded successfully",
         "dataset_id": dataset_id,
-        "filename": file.filename,
+        "filename": safe_filename,
         "status": "pending_processing"
     }
 

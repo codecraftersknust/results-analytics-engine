@@ -44,7 +44,15 @@ The system is built on a 4-layer architecture:
     ```bash
     pip install -r requirements.txt
     ```
-    *(Ensure you configure a `.env` file with your `GEMINI_API_KEY` for the AI features to work).*
+3.  Create your environment file:
+    ```bash
+    cp .env.example .env
+    ```
+    Then set at least:
+    - `JWT_SECRET` (required for secure auth)
+    - `CORS_ORIGINS` (comma-separated frontend domains)
+    - `GEMINI_API_KEY` (optional, enables AI features)
+
 4.  Initialize the database with demo users:
     ```bash
     python3 src/api/seed.py
@@ -81,7 +89,7 @@ If you prefer running them separately:
 
 **Backend:**
 ```bash
-./run_backend.sh
+python3 -m uvicorn src.api.main:app --host 0.0.0.0 --port 8000
 ```
 
 **Frontend:**
