@@ -21,7 +21,7 @@ class Settings:
     jwt_secret: str
     jwt_algorithm: str
     access_token_expire_minutes: int
-    users_db_file: str
+    database_url: str
     upload_dir: str
     normalized_file: str
     max_upload_size_mb: int
@@ -36,7 +36,7 @@ settings = Settings(
     jwt_secret=os.getenv("JWT_SECRET", ""),
     jwt_algorithm=os.getenv("JWT_ALGORITHM", "HS256"),
     access_token_expire_minutes=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "10080")),
-    users_db_file=os.getenv("USERS_DB_FILE", "data/users.db"),
+    database_url=os.getenv("DATABASE_URL", ""),
     upload_dir=os.getenv("UPLOAD_DIR", "data/uploads"),
     normalized_file=os.getenv("NORMALIZED_FILE", "normalized_results.csv"),
     max_upload_size_mb=int(os.getenv("MAX_UPLOAD_SIZE_MB", "10")),
